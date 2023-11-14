@@ -1,0 +1,18 @@
+name: Trigger Jepsen Tests
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      rabbitmq_version:
+        description: 'RabbitMQ version (e.g. 3.13.0-alpha.278)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Trigger RA Jepsen Tests
+      run: |
+        echo ${{ github.event.payload.release }}
