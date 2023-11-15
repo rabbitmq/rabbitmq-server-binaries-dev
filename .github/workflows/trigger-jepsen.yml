@@ -10,9 +10,23 @@ on:
         type: string
 
 jobs:
-  build:
+  dispatch:
     runs-on: ubuntu-22.04
     steps:
-    - name: Trigger RA Jepsen Tests
-      run: |
-        echo ${{ github.event.payload.release }}
+      - name: Get RabbitMQ version
+        run: |
+          TAG=${{ github.event.release.tag_name }}
+          VERSION=$(echo $TAG | cut -c2-)
+          echo "rabbitmq_version=$VERSION" >> $GITHUB_ENV
+          MAJOR=$(echo $VERSION | cut -f1 -d'.')
+          MINOR=$(echo $VERSION | cut -f2 -d'.')
+          BRANCH=$MAJOR$MINOR
+          echo "rabbitmq_branch=$BRANCH" >> $GITHUB_ENV
+      - name: Dispatch event to trigger Jepsen tests
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          event-type: new_alpha_${{ env.rabbitmq_branch }}
+          repository: rabbitmq/jepsen
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          client-payload: >-
+            {"version": "${{ env.rabbitmq_version }}"}
